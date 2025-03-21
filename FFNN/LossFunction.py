@@ -1,5 +1,5 @@
 """
-This file contains the loss functions used in the FFNN model.
+This module contains the loss functions used in the FFNN model.
 
 List of loss functions
 - Mean Squared Error
@@ -8,7 +8,6 @@ List of loss functions
 """
 
 import numpy as np
-from typing import Tuple, Union
 
 class LossFunction:
     """
