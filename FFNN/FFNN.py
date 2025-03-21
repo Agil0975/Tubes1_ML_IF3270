@@ -239,3 +239,18 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    import sys
+    import time
+
+    def progress_bar(total, length=200):
+        for i in range(total + 1):
+            progress = i / total
+            bar = '=' * int(progress * length)
+            spaces = ' ' * (length - len(bar))
+            sys.stdout.write(f"\r[{bar}{spaces}] {int(progress * 100)}%")
+            sys.stdout.flush()
+            time.sleep(0.1)
+        print()
+
+    progress_bar(100)
