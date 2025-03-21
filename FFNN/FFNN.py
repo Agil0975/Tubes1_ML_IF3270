@@ -50,6 +50,12 @@ class FFNN:
             # For the input layer, we don't initialize weights and biases
             self.weights.append(None)
             self.biases.append(None)
+            self.initialization[-1] = None  # No initialization for the input layer
+            self.activations[-1] = None     # No activation function for the input layer
+        
+        # placeholder for gradients
+        self.weights_gradient.append(None)
+        self.biases_gradient.append(None)
     
     def __initialize_weights(self, neurons_in, neurons_out, method, seed=None,
                              lower_bound=0, upper_bound=1, mean=0, std=1):
@@ -206,34 +212,30 @@ class FFNN:
         """
         pass
 
+def main():
+    """
+    Main function to test the FFNN class.
+    """
+    # Create an instance of the FFNN class
+    model = FFNN()
 
+    # Add layers to the model
+    model.add_layer(3)
+    model.add_layer(2, activation_function='sigmoid', initialization_method='uniform', lower_bound=-1, upper_bound=1)
+    model.add_layer(1, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1)
 
-# a = 5
-# b = 10
-# lower_bound = 0
-# upper_bound = 10
-# mean = 0
-# std = 1
+    # Print the model summary
+    print("Layers:", model.layers)
+    print("Weights:", model.weights)
+    print("Biases:", model.biases)
+    print("Activations:", model.activations)
+    print("Initializations:", model.initialization)
+    print("Weights Gradient:", model.weights_gradient)
+    print("Biases Gradient:", model.biases_gradient)
+    print("Loss Function:", model.loss_function)
+    print("Activation Function:", model._af)
+    print("Loss Function:", model._lf)
+    print("Model:", model)
 
-# print(f"Uniform initialization: {np.random.uniform(lower_bound, upper_bound, (a, b))}")
-# print(f"Normal initialization: {np.random.normal(mean, std, (a, b))}")
-# print(f"Zero initialization: {np.zeros((a, b))}")
-# print(f"Zero initialization: {np.zeros(a)}")
-
-# a = np.array([[1, 2, 3], 
-#               [4, 5, 6]])
-# b = np.array([[7, 8, 9],
-#               [10, 11, 12],
-#               [13, 14, 15]])
-# print(np.dot(a, b))  # Transpose b to match the dimensions for dot product
-# print(a @ b)  # Using the @ operator for matrix multiplication
-# print(np.matmul(a, b))  # Using np.matmul for matrix multiplication
-
-# a = np.array([[1, 2], 
-#               [3, 4],
-#               [5, 6]])
-# b = np.array([100, 1000])
-
-# print(a)
-# print(b)
-# print(a+b)  # Element-wise addition
+if __name__ == "__main__":
+    main()
