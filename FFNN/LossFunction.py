@@ -26,7 +26,7 @@ class LossFunction:
         Returns:
         float: Mean Squared Error.
         """
-        return np.mean(np.square(y_true - y_pred))
+        return np.sum(np.square(y_true - y_pred), axis=1).mean() # Average over the batch size
     
     def MSE_derivative(self, y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
         """
@@ -39,7 +39,7 @@ class LossFunction:
         Returns:
         np.ndarray: Derivative of Mean Squared Error.
         """
-        return 2 * (y_pred - y_true) / y_true.size
+        return 2 * (y_pred - y_true) / y_true.shape[0]  # Average over the batch size
 
     def BCE(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """
@@ -69,7 +69,7 @@ class LossFunction:
         """
         # Clip predictions to prevent division by zero
         y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-        return - ((y_pred - y_true) / (y_pred * (1 - y_pred))) / y_true.size 
+        return - ((y_pred - y_true) / (y_pred * (1 - y_pred))) / y_true.size
     
     def CCE(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """
