@@ -119,8 +119,8 @@ class FFNN:
         np.ndarray: Output of the neural network.
         """
         for i in range(1, len(self.layers)):
-            x = self._af.activation(x @ self.weights[i-1] + self.biases[i-1],
-                                  activation_function=self.activations[i-1])
+            x = self._af.activation(x @ self.weights[i] + self.biases[i],
+                                  activation_function=self.activations[i])
         return x
 
     def __back_propagation(self, x: np.ndarray, y: np.ndarray) -> None:
@@ -131,8 +131,34 @@ class FFNN:
         x (np.ndarray): Input data.
         y (np.ndarray): True labels.
         """
-        pass
+        nabla_b = [np.zeros(b.shape) for b in self.biases]      # derivative of loss with respect to bias 
+        nabla_w = [np.zeros(w.shape) for w in self.weights]     # derivative of loss with respect to weights
+        
+        # Feed Forward
+        a = x
+        activations = [x]  # List to store activations for each layer
+        zs = []            # List to store net-value for each layer
+        for i in range(1, len(self.layers)):
+            z = a @ self.weights[i] + self.biases[i]
+            zs.append(z)
+            a = self._af.activation(z, activation_function=self.activations[i])
+            activations.append(a)
 
+        # Backward pass
+        𝛿 = [np.zeros(a.shape) for a in activations]        # derivative of loss with respect to net
+        for i in range(len(self.layers) - 1, 0, -1):        # loop through layers in reverse order excluding input layer
+            if i == len(self.layers) - 1:
+                𝛿[i] = self._lf.lost_derivative(y, activations[i], loss_function=self.loss_function) * \
+                        self._af.activation_derivative(zs[i], activation_function=self.activations[i])
+            else:
+                𝛿[i] = (𝛿[i + 1] @ self.weights[i + 1].T) * \
+                        self._af.activation_derivative(zs[i], activation_function=self.activations[i])
+                
+            nabla_b[i] = 𝛿[i]
+            nabla_w[i] = activations[i - 1] * 𝛿[i].reshape(-1, 1)
+
+        return (nabla_b, nabla_w)
+            
     def train(self, x: np.ndarray, y: np.ndarray, *, 
               batch_size: int,
               learning_rate: float,
@@ -156,7 +182,9 @@ class FFNN:
         returns:
         np.ndarray: history of the loss function (training and validation loss) for each epoch
         """
-        pass
+        self.loss_function = loss_function
+        
+        
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         """
@@ -220,9 +248,9 @@ def main():
     model = FFNN()
 
     # Add layers to the model
-    model.add_layer(3)
+    model.add_layer(2)
     model.add_layer(2, activation_function='sigmoid', initialization_method='uniform', lower_bound=-1, upper_bound=1)
-    model.add_layer(1, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1)
+    model.add_layer(1, activation_function='relu', initialization_method='normal', mean=0, std=0.1)
 
     # Print the model summary
     print("Layers:", model.layers)
@@ -237,20 +265,40 @@ def main():
     print("Loss Function:", model._lf)
     print("Model:", model)
 
+    x = np.array([[0,0], [0,1], [1,0], [1,1]])
+    # y = np.array([[0], [0], [0], [1]])          # AND
+    y = np.array([[1], [1], [1], [0]])        # NAND
+    # y = np.array([[0], [1], [1], [1]])        # OR
+    # y = np.array([[1], [0], [0], [0]])        # NOR
+    # y = np.array([[0], [1], [1], [0]])        # XOR
+    # y = np.array([[1], [0], [0], [1]])        # XNOR
+
+    print("Input Data:\n", x)
+    print("True Labels:\n", y)
+    print("Predicted Labels:\n", model.predict(x))
+    𝛿 = 10
+    print(𝛿)
+
+    arr1 = np.array([1, 10, 100])
+    arr2 = np.array([1, -1]).reshape(-1, 1)
+    print(arr1)
+    print(arr2)
+    print(arr1 * arr2)
+
 if __name__ == "__main__":
     main()
 
     import sys
     import time
 
-    def progress_bar(total, length=200):
-        for i in range(total + 1):
-            progress = i / total
-            bar = '=' * int(progress * length)
-            spaces = ' ' * (length - len(bar))
-            sys.stdout.write(f"\r[{bar}{spaces}] {int(progress * 100)}%")
-            sys.stdout.flush()
-            time.sleep(0.1)
-        print()
+    # def progress_bar(total, length=200):
+    #     for i in range(total + 1):
+    #         progress = i / total
+    #         bar = '=' * int(progress * length)
+    #         spaces = ' ' * (length - len(bar))
+    #         sys.stdout.write(f"\r[{bar}{spaces}] {int(progress * 100)}%")
+    #         sys.stdout.flush()
+    #         time.sleep(0.1)
+    #     print()
 
-    progress_bar(100)
+    # progress_bar(100)
