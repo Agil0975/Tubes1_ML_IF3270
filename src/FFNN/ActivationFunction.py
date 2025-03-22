@@ -140,53 +140,53 @@ class ActivationFunction:
         s = self.__softmax(x)
         return s * (1 - s)
     
-    def activation(self, x: np.ndarray, *, activation_function: str) -> np.ndarray:
+    def activation(self, x: np.ndarray, *, activation_type: str) -> np.ndarray:
         """
         Apply the specified activation function to the input.
 
         Parameters:
         x (np.ndarray): Input array.
-        activation_function (str): Name of the activation function.
+        activation_type (str): Name of the activation function.
 
         Returns:
         np.ndarray: Output array after applying the activation function.
         """
-        if activation_function == 'linear':
+        if activation_type == 'linear':
             return self.__linear(x)
-        elif activation_function == 'relu':
+        elif activation_type == 'relu':
             return self.__relu(x)
-        elif activation_function == 'sigmoid':
+        elif activation_type == 'sigmoid':
             return self.__sigmoid(x)
-        elif activation_function == 'tanh':
+        elif activation_type == 'tanh':
             return self.__tanh(x)
-        elif activation_function == 'softmax':
+        elif activation_type == 'softmax':
             return self.__softmax(x)
         else:
-            raise ValueError(f"Unknown activation function: {activation_function}. Use 'linear', 'relu', 'sigmoid', 'tanh', or 'softmax'.")
+            raise ValueError(f"Unknown activation function: {activation_type}. Use 'linear', 'relu', 'sigmoid', 'tanh', or 'softmax'.")
         
-    def activation_derivative(self, x: np.ndarray, *, activation_function: str) -> np.ndarray:
+    def activation_derivative(self, x: np.ndarray, *, activation_type: str) -> np.ndarray:
         """
         Apply the derivative of the specified activation function to the input.
 
         Parameters:
         x (np.ndarray): Input array.
-        activation_function (str): Name of the activation function.
+        activation_type (str): Name of the activation function.
 
         Returns:
         np.ndarray: Output array after applying the derivative of the activation function.
         """
-        if activation_function == 'linear':
+        if activation_type == 'linear':
             return self.__linear_derivative(x)
-        elif activation_function == 'relu':
+        elif activation_type == 'relu':
             return self.__relu_derivative(x)
-        elif activation_function == 'sigmoid':
+        elif activation_type == 'sigmoid':
             return self.__sigmoid_derivative(x)
-        elif activation_function == 'tanh':
+        elif activation_type == 'tanh':
             return self.__tanh_derivative(x)
-        elif activation_function == 'softmax':
+        elif activation_type == 'softmax':
             return self.__softmax_derivative(x)
         else:
-            raise ValueError(f"Unknown activation function: {activation_function}. Use 'linear', 'relu', 'sigmoid', 'tanh', or 'softmax'.")
+            raise ValueError(f"Unknown activation function: {activation_type}. Use 'linear', 'relu', 'sigmoid', 'tanh', or 'softmax'.")
         
 
 def main():
@@ -195,24 +195,24 @@ def main():
     activation_function = ActivationFunction()
     
     print("Linear Activation:")
-    print(activation_function.activation(x, activation_function='linear'))
-    print(activation_function.activation_derivative(x, activation_function='linear'))
+    print(activation_function.activation(x, activation_type='linear'))
+    print(activation_function.activation_derivative(x, activation_type='linear'))
     
     print("\nReLU Activation:")
-    print(activation_function.activation(x, activation_function='relu'))
-    print(activation_function.activation_derivative(x, activation_function='relu'))
+    print(activation_function.activation(x, activation_type='relu'))
+    print(activation_function.activation_derivative(x, activation_type='relu'))
     
     print("\nSigmoid Activation:")
-    print(activation_function.activation(x, activation_function='sigmoid'))
-    print(activation_function.activation_derivative(x, activation_function='sigmoid'))
+    print(activation_function.activation(x, activation_type='sigmoid'))
+    print(activation_function.activation_derivative(x, activation_type='sigmoid'))
     
     print("\nTanh Activation:")
-    print(activation_function.activation(x, activation_function='tanh'))
-    print(activation_function.activation_derivative(x, activation_function='tanh'))
+    print(activation_function.activation(x, activation_type='tanh'))
+    print(activation_function.activation_derivative(x, activation_type='tanh'))
     
     print("\nSoftmax Activation:")
-    print(activation_function.activation(x, activation_function='softmax'))
-    print(activation_function.activation_derivative(x, activation_function='softmax'))
+    print(activation_function.activation(x, activation_type='softmax'))
+    print(activation_function.activation_derivative(x, activation_type='softmax'))
 
 if __name__ == "__main__":
     main()

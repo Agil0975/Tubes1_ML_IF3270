@@ -100,7 +100,7 @@ class LossFunction:
         y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
         return - (y_true / y_pred) / y_true.shape[0]
     
-    def lost(self, y_true: np.ndarray, y_pred: np.ndarray, *, loss_type: str) -> float:
+    def loss(self, y_true: np.ndarray, y_pred: np.ndarray, *, loss_type: str) -> float:
         """
         Calculate the loss based on the specified type.
 
@@ -121,7 +121,7 @@ class LossFunction:
         else:
             raise ValueError(f"Unknown loss type: {loss_type}. Use 'MSE', 'BCE', or 'CCE'.")
         
-    def lost_derivative(self, y_true: np.ndarray, y_pred: np.ndarray, *, loss_type: str) -> np.ndarray:
+    def loss_derivative(self, y_true: np.ndarray, y_pred: np.ndarray, *, loss_type: str) -> np.ndarray:
         """
         Calculate the derivative of the loss based on the specified type.
 
@@ -149,13 +149,13 @@ def main():
     
     loss_fn = LossFunction()
     
-    print("Mean Squared Error:", loss_fn.lost(y_true, y_pred, loss_type='MSE'))
-    print("Binary Cross Entropy:", loss_fn.lost(y_true, y_pred, loss_type='BCE'))
-    print("Categorical Cross Entropy:", loss_fn.lost(y_true, y_pred, loss_type='CCE'))
+    print("Mean Squared Error:", loss_fn.loss(y_true, y_pred, loss_type='MSE'))
+    print("Binary Cross Entropy:", loss_fn.loss(y_true, y_pred, loss_type='BCE'))
+    print("Categorical Cross Entropy:", loss_fn.loss(y_true, y_pred, loss_type='CCE'))
 
-    print("Mean Squared Error Derivative:", loss_fn.lost_derivative(y_true, y_pred, loss_type='MSE'))
-    print("Binary Cross Entropy Derivative:", loss_fn.lost_derivative(y_true, y_pred, loss_type='BCE'))
-    print("Categorical Cross Entropy Derivative:", loss_fn.lost_derivative(y_true, y_pred, loss_type='CCE'))
+    print("Mean Squared Error Derivative:", loss_fn.loss_derivative(y_true, y_pred, loss_type='MSE'))
+    print("Binary Cross Entropy Derivative:", loss_fn.loss_derivative(y_true, y_pred, loss_type='BCE'))
+    print("Categorical Cross Entropy Derivative:", loss_fn.loss_derivative(y_true, y_pred, loss_type='CCE'))
 
 if __name__ == "__main__":
     main()
