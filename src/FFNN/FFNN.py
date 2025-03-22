@@ -21,6 +21,7 @@ class FFNN:
 
     def add_layer(self, num_neurons, *,
                   activation_function='sigmoid', 
+                  activation_parameters={},
                   initialization_method='normal', 
                   seed=None,
                   lower_bound=0, upper_bound=1,  # for uniform initialization
@@ -32,6 +33,7 @@ class FFNN:
         Parameters:
             num_neurons (int): Number of neurons in the layer.
             activation_function (str): Activation function for the layer. Default is 'sigmoid'.
+            activation_parameters (dict): Parameters for the activation function. Default is an empty dictionary.
             initialization_method (str): Method for initializing weights and biases. Default is 'normal'.
             seed (int): Random seed for initialization. Default is None.
             lower_bound (float): Lower bound for uniform initialization. Default is 0.
@@ -40,7 +42,7 @@ class FFNN:
             std (float): Standard deviation for normal initialization. Default is 1.
         """
         self.layers.append(num_neurons)
-        self.activations.append(activation_function)
+        self.activations.append((activation_function, activation_parameters))
         self.initialization.append(initialization_method)
         if len(self.layers) > 1:
             # Initialize weights and biases for the layer
@@ -121,7 +123,7 @@ class FFNN:
         np.ndarray: Output of the neural network.
         """
         for i in range(1, len(self.layers)):
-            x = self._af.activation(np.dot(x, self.weights[i]) + self.biases[i], activation_type=self.activations[i])
+            x = self._af.activation(np.dot(x, self.weights[i]) + self.biases[i], activation_type=self.activations[i][0], **self.activations[i][1])
         return x
 
     def __back_propagation(self, x: np.ndarray, y: np.ndarray) -> None:
@@ -142,7 +144,7 @@ class FFNN:
         for i in range(1, len(self.layers)):
             z = np.dot(a, self.weights[i]) + self.biases[i]  # net-value for each layer 
             zs.append(z)
-            a = self._af.activation(z, activation_type=self.activations[i])
+            a = self._af.activation(z, activation_type=self.activations[i][0], **self.activations[i][1])  # activation function for each layer
             activations.append(a)
 
         # Backward pass
@@ -150,10 +152,10 @@ class FFNN:
         for i in range(len(self.layers) - 1, 0, -1):        # loop through layers in reverse order excluding input layer
             if i == len(self.layers) - 1:
                 𝛿[i] = self._lf.loss_derivative(y, activations[i], loss_type=self.loss_function) * \
-                        self._af.activation_derivative(zs[i], activation_type=self.activations[i])
+                        self._af.activation_derivative(zs[i], activation_type=self.activations[i][0], **self.activations[i][1])
             else:
                 𝛿[i] = np.dot(𝛿[i + 1], self.weights[i + 1].T) * \
-                        self._af.activation_derivative(zs[i], activation_type=self.activations[i])
+                        self._af.activation_derivative(zs[i], activation_type=self.activations[i][0], **self.activations[i][1])
                 
             nabla_b[i] = 𝛿[i]
             nabla_w[i] = activations[i - 1].reshape(-1, 1) * 𝛿[i]
@@ -224,7 +226,7 @@ class FFNN:
 
             # Calculate training and validation loss
             train_loss = self._lf.loss(y_train, self.__feed_forward(x_train), loss_type=loss_function)
-            val_loss = 0 # self._lf.loss(y_val, self.__feed_forward(x_val), loss_type=loss_function)
+            val_loss = self._lf.loss(y_val, self.__feed_forward(x_val), loss_type=loss_function)
             history[epoch] = [train_loss, val_loss]
 
             if verbose > 0:
@@ -232,7 +234,7 @@ class FFNN:
                 progress = (epoch + 1) / epochs
                 bar_filled = "=" * int(progress * bar_length)
                 bar_empty = " " * (bar_length - len(bar_filled))
-                sys.stdout.write(f"\rEpoch {epoch+1}/{epochs} [{bar_filled}{bar_empty}] {progress:.2%} "
+                sys.stdout.write(f"\rEpoch {epoch+1}/{epochs} [{bar_filled}{bar_empty}] {progress:.2%}, "
                                 f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
                 sys.stdout.flush()
                 
@@ -304,8 +306,12 @@ def main():
 
     # Add layers to the model
     model.add_layer(2)
-    model.add_layer(2, activation_function='sigmoid', initialization_method='normal', lower_bound=-1, upper_bound=1, seed=25)
+    model.add_layer(2, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1, seed=25)
     model.add_layer(1, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1, seed=25)
+
+    # model.add_layer(2)
+    # model.add_layer(2, activation_function='leaky_relu', activation_parameters={'alpha': 6666}, initialization_method='normal', mean=0, std=0.1) 
+    # model.add_layer(1, activation_function='selu', activation_parameters={'alpha': 23123, 'lambda_': 123}, initialization_method='normal', mean=0, std=0.1)
 
     # Print the model summary
     # print("Layers:", model.layers)
@@ -336,7 +342,7 @@ def main():
     # print("Weights Gradient before training:\n", model.weights_gradient)
     # print("Biases Gradient before training:\n", model.biases_gradient)
 
-    model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1, seed=42)
+    model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1, seed=25)
     print("Predicted Labels after training:\n", model.predict(x))
     # print("Weights after training:\n", model.weights)
     # print("Biases after training:\n", model.biases)
