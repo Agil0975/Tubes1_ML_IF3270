@@ -162,38 +162,36 @@ class FFNN:
 
         return (nabla_b, nabla_w)
             
-    def train(self, x: np.ndarray, y: np.ndarray, *, 
+    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray = None, y_val: np.ndarray = None, *, 
               batch_size: int,
               learning_rate: float,
               epochs: int,
               loss_function: str,
               verbose: int = 1,
-              validation_split: float = 0.2,
               seed: int = None,
               ):
         """
         Train the neural network.
         
         Parameters:
-        x (np.ndarray): Input data.
-        y (np.ndarray): True labels.
+        x_train (np.ndarray): Training data.
+        y_train (np.ndarray): Training labels.
+        x_val (np.ndarray): Validation data. If None, validation will be done using the training data.
+        y_val (np.ndarray): Validation labels. If None, validation will be done using the training labels.
         batch_size (int): Size of each batch for training.
         learning_rate (float): Learning rate for the optimizer.
         epochs (int): Number of epochs for training.
         loss_function (str): Loss function to be used for training.
         verbose (int): Verbosity mode. 0 = silent, 1 = progress bar + training info
-        validation_split (float): Fraction of the training data to be used as validation data.
         seed (int): Random seed for shuffling the data.
         """
         self.loss_function = loss_function
         history = np.zeros((epochs, 2))  # Store training and validation loss for each epoch
-        num_samples = x.shape[0]
-        num_validation_samples = int(num_samples * validation_split)
-        num_training_samples = num_samples - num_validation_samples
-        x_train = x[:num_training_samples]
-        y_train = y[:num_training_samples]
-        x_val = x[num_training_samples:]
-        y_val = y[num_training_samples:]
+        num_training_samples = x_train.shape[0]
+
+        if x_val is None or y_val is None:
+            x_val = x_train
+            y_val = y_train
 
         if seed is not None:
             np.random.seed(seed)
@@ -305,9 +303,10 @@ def main():
     model = FFNN()
 
     # Add layers to the model
-    model.add_layer(2)
-    model.add_layer(2, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1, seed=25)
-    model.add_layer(1, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1, seed=25)
+    model.add_layer(4)
+    model.add_layer(10, activation_function='relu', initialization_method='normal', mean=0, std=0.1)
+    model.add_layer(10, activation_function='relu', initialization_method='normal', mean=0, std=0.1)
+    model.add_layer(1, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1)
 
     # model.add_layer(2)
     # model.add_layer(2, activation_function='leaky_relu', activation_parameters={'alpha': 6666}, initialization_method='normal', mean=0, std=0.1) 
@@ -326,13 +325,22 @@ def main():
     # print("Loss Function:", model._lf)
     # print("Model:", model)
 
-    x = np.array([[0,0], [0,1], [1,0], [1,1]])
+    # x = np.array([[0,0], [0,1], [1,0], [1,1]])
     # y = np.array([[0], [0], [0], [1]])          # AND
     # y = np.array([[1], [1], [1], [0]])          # NAND
     # y = np.array([[0], [1], [1], [1]])          # OR
     # y = np.array([[1], [0], [0], [0]])          # NOR
     # y = np.array([[0], [1], [1], [0]])          # XOR
-    y = np.array([[1], [0], [0], [1]])          # XNOR
+    # y = np.array([[1], [0], [0], [1]])          # XNOR
+
+    x = np.array([[0,0,0,0],
+                  [0,0,0,1], [0,0,1,0], [0,1,0,0], [1,0,0,0], 
+                  [0,0,1,1], [0,1,0,1], [1,0,0,1], [0,1,1,0], [1,0,1,0], [1,1,0,0],
+                  [0,1,1,1], [1,0,1,1], [1,1,0,1], [1,1,1,0], 
+                  [1,1,1,1]])
+    def xor(x1, x2, x3, x4):
+        return (x1 ^ x2) ^ (x3 ^ x4)
+    y = np.array([[xor(x1, x2, x3, x4)] for x1, x2, x3, x4 in x])
 
     print("Input Data:\n", x)
     print("True Labels:\n", y)
@@ -342,8 +350,9 @@ def main():
     # print("Weights Gradient before training:\n", model.weights_gradient)
     # print("Biases Gradient before training:\n", model.biases_gradient)
 
-    model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1, seed=25)
-    print("Predicted Labels after training:\n", model.predict(x))
+    model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1)
+    for i in range(len(y)):
+        print(f"Predicted Labels for {x[i]}:", model.predict(x[i].reshape(1, -1)), "True Labels:", y[i])
     # print("Weights after training:\n", model.weights)
     # print("Biases after training:\n", model.biases)
     # print("Weights Gradient after training:\n", model.weights_gradient)
