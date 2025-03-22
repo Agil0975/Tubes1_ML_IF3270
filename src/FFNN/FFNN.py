@@ -232,7 +232,7 @@ class FFNN:
                 progress = (epoch + 1) / epochs
                 bar_filled = "=" * int(progress * bar_length)
                 bar_empty = " " * (bar_length - len(bar_filled))
-                sys.stdout.write(f"\rEpoch {epoch+1}/{epochs} [{bar_filled}{bar_empty}] "
+                sys.stdout.write(f"\rEpoch {epoch+1}/{epochs} [{bar_filled}{bar_empty}] {progress:.2%} "
                                 f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
                 sys.stdout.flush()
                 
@@ -331,17 +331,17 @@ def main():
     print("Input Data:\n", x)
     print("True Labels:\n", y)
     print("Predicted Labels:\n", model.predict(x))
-    print("Weights before training:\n", model.weights)
-    print("Biases before training:\n", model.biases)
-    print("Weights Gradient before training:\n", model.weights_gradient)
-    print("Biases Gradient before training:\n", model.biases_gradient)
+    # print("Weights before training:\n", model.weights)
+    # print("Biases before training:\n", model.biases)
+    # print("Weights Gradient before training:\n", model.weights_gradient)
+    # print("Biases Gradient before training:\n", model.biases_gradient)
 
     model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1, seed=42)
     print("Predicted Labels after training:\n", model.predict(x))
-    print("Weights after training:\n", model.weights)
-    print("Biases after training:\n", model.biases)
-    print("Weights Gradient after training:\n", model.weights_gradient)
-    print("Biases Gradient after training:\n", model.biases_gradient)
+    # print("Weights after training:\n", model.weights)
+    # print("Biases after training:\n", model.biases)
+    # print("Weights Gradient after training:\n", model.weights_gradient)
+    # print("Biases Gradient after training:\n", model.biases_gradient)
     # print(model.history)
 
 if __name__ == "__main__":
