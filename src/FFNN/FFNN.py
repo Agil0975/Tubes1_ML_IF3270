@@ -191,6 +191,7 @@ class FFNN:
               loss_function: str,
               verbose: int = 1,
               seed: int = None,
+              error_threshold: float = 0,
               ):
         """
         Train the neural network.
@@ -206,6 +207,7 @@ class FFNN:
         loss_function (str): Loss function to be used for training.
         verbose (int): Verbosity mode. 0 = silent, 1 = progress bar + training info
         seed (int): Random seed for shuffling the data.
+        error_threshold (float): Threshold for early stopping based on validation loss.
         """
         self.loss_function = loss_function
         history = np.zeros((epochs, 2))  # Store training and validation loss for each epoch
@@ -257,6 +259,10 @@ class FFNN:
                 sys.stdout.write(f"\rEpoch {epoch+1}/{epochs} [{bar_filled}{bar_empty}] {progress:.2%}, "
                                 f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
                 sys.stdout.flush()
+
+            if val_loss < error_threshold:
+                print(f"\nStopping early at epoch {epoch + 1} due to validation loss below threshold.")
+                break
                 
         self.weights_gradient = nabla_w
         self.biases_gradient = nabla_b
@@ -326,9 +332,9 @@ def main():
 
     # Add layers to the model
     model.add_layer(4)
-    model.add_layer(10, activation_function='relu', initialization_method='normal', mean=0, std=0.1)
-    model.add_layer(10, activation_function='relu', initialization_method='normal', mean=0, std=0.1)
-    model.add_layer(1, activation_function='sigmoid', initialization_method='normal', mean=0, std=0.1)
+    model.add_layer(10, activation_function='relu', initialization_method='he_normal')
+    model.add_layer(10, activation_function='relu', initialization_method='he_normal')
+    model.add_layer(1, activation_function='sigmoid', initialization_method='xavier_normal')
 
     # model.add_layer(2)
     # model.add_layer(2, activation_function='leaky_relu', activation_parameters={'alpha': 6666}, initialization_method='normal', mean=0, std=0.1) 
