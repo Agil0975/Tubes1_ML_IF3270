@@ -74,18 +74,37 @@ class FFNN:
         Returns:
         np.ndarray: Initialized weights.
         """
+        if seed is not None:
+            np.random.seed(seed)
+
         if method == 'zero':
             return np.zeros((neurons_in, neurons_out))
+        
         elif method == 'uniform':
-            if seed is not None:
-                np.random.seed(seed)
             return np.random.uniform(lower_bound, upper_bound, (neurons_in, neurons_out))
+        
         elif method == 'normal':
-            if seed is not None:
-                np.random.seed(seed)
             return np.random.normal(mean, std, (neurons_in, neurons_out))
+        
+        elif method == 'xavier_uniform':
+            limit = np.sqrt(6 / (neurons_in + neurons_out))
+            return np.random.uniform(-limit, limit, (neurons_in, neurons_out))
+        
+        elif method == 'xavier_normal':
+            std = np.sqrt(2 / (neurons_in + neurons_out))
+            return np.random.normal(0, std, (neurons_in, neurons_out))
+        
+        elif method == 'he_uniform':
+            limit = np.sqrt(3 / neurons_in)
+            return np.random.uniform(-limit, limit, (neurons_in, neurons_out))
+        
+        elif method == 'he_normal':
+            std = np.sqrt(2 / neurons_in)
+            return np.random.normal(0, std, (neurons_in, neurons_out))
+        
         else:
-            raise ValueError(f"Unknown initialization method: {method}. Use 'zero', 'uniform', or 'normal'.")
+            raise ValueError(f"Unknown initialization method: {method}. Use 'zero', 'uniform', 'normal', "
+                             "'xavier_uniform', 'xavier_normal', 'he_uniform', or 'he_normal'.")
 
     def __initialize_biases(self, neurons_out, method, seed=None,
                             lower_bound=0, upper_bound=1, mean=0, std=1):
@@ -99,18 +118,21 @@ class FFNN:
         Returns:
         np.ndarray: Initialized biases.
         """
-        if method == 'zero':
+        if seed is not None:
+            np.random.seed(seed)
+
+        if method in ['zero', 'xavier_uniform', 'xavier_normal', 'he_uniform', 'he_normal', None]:
             return np.zeros(neurons_out)
-        elif method == 'uniform':
-            if seed is not None:
-                np.random.seed(seed)
+
+        elif method == 'uniform':            
             return np.random.uniform(lower_bound, upper_bound, neurons_out)
+        
         elif method == 'normal':
-            if seed is not None:
-                np.random.seed(seed)
             return np.random.normal(mean, std, neurons_out)
+
         else:
-            raise ValueError(f"Unknown initialization method: {method}. Use 'zero', 'uniform', or 'normal'.")
+            raise ValueError(f"Unknown initialization method: {method}. Use 'zero', 'uniform', 'normal', "
+                             "'xavier_uniform', 'xavier_normal', 'he_uniform', or 'he_normal'.")
         
     def __feed_forward(self, x: np.ndarray) -> np.ndarray:
         """
