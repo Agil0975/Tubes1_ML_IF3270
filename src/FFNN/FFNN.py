@@ -184,11 +184,16 @@ class FFNN:
 
         return (nabla_b, nabla_w)
             
-    def train(self, x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray = None, y_val: np.ndarray = None, *, 
+    def train(self, 
+              x_train: np.ndarray, y_train: np.ndarray, 
+              x_val: np.ndarray = None, y_val: np.ndarray = None, 
+              *, 
               batch_size: int,
               learning_rate: float,
               epochs: int,
               loss_function: str,
+              l1_lambda: float = 0,
+              l2_lambda: float = 0,
               verbose: int = 1,
               seed: int = None,
               error_threshold: float = 0,
@@ -203,6 +208,8 @@ class FFNN:
         y_val (np.ndarray): Validation labels. If None, validation will be done using the training labels.
         batch_size (int): Size of each batch for training.
         learning_rate (float): Learning rate for the optimizer.
+        l1_lambda (float): L1 regularization parameter.
+        l2_lambda (float): L2 regularization parameter.
         epochs (int): Number of epochs for training.
         loss_function (str): Loss function to be used for training.
         verbose (int): Verbosity mode. 0 = silent, 1 = progress bar + training info
@@ -235,14 +242,24 @@ class FFNN:
                 # Perform backpropagation for each batch
                 nabla_b = [None if b is None else np.zeros(b.shape) for b in self.biases]      # derivative of loss with respect to bias
                 nabla_w = [None if w is None else np.zeros(w.shape) for w in self.weights]     # derivative of loss with respect to weights
+                
                 for j in range(len(x_batch)):
                     delta_b, delta_w = self.__back_propagation(x_batch[j], y_batch[j])
                     for k in range(1, len(self.layers)):
                         nabla_b[k] += delta_b[k]
                         nabla_w[k] += delta_w[k]
 
-                # Update weights and biases
+                # Update weights and biases with regularization
                 for k in range(1, len(self.layers)):
+                    # L1 regularization
+                    if l1_lambda != 0:
+                        nabla_w[k] += l1_lambda * np.sign(self.weights[k])
+
+                    # L2 regularization
+                    if l2_lambda != 0:
+                        nabla_w[k] += 2 * l2_lambda * self.weights[k]
+
+                    # Update weights and biases
                     self.biases[k] -= (learning_rate / batch_size) * nabla_b[k]
                     self.weights[k] -= (learning_rate / batch_size) * nabla_w[k]
 
@@ -281,11 +298,13 @@ class FFNN:
         """
         return self.__feed_forward(x)
     
-    def plot_network_graph(self):
+    def plot_network_graph(self, *, visualize=''):
         """
         Plot the network graph.
+
+        Parameters:
+        visualize (str): Type of visualization ('', 'weights', 'gradients'). 
         """
-        pass
 
     def plot_weight_distribution(layers: list[int]):
         """
@@ -302,6 +321,15 @@ class FFNN:
 
         Parameters:
         layers (list[int]): List of layers to be plotted
+        """
+        pass
+
+    def plot_loss_function(self):
+        """
+        Plotting the loss function for training and validation
+
+        Parameters:
+        None
         """
         pass
 
@@ -332,9 +360,9 @@ def main():
 
     # Add layers to the model
     model.add_layer(4)
-    model.add_layer(10, activation_function='relu', initialization_method='he_normal')
-    model.add_layer(10, activation_function='relu', initialization_method='he_normal')
-    model.add_layer(1, activation_function='sigmoid', initialization_method='xavier_normal')
+    model.add_layer(32, activation_function='elu', initialization_method='he_normal')
+    model.add_layer(16, activation_function='tanh', initialization_method='xavier_normal')
+    model.add_layer(2, activation_function='sigmoid', initialization_method='xavier_normal')
 
     # model.add_layer(2)
     # model.add_layer(2, activation_function='leaky_relu', activation_parameters={'alpha': 6666}, initialization_method='normal', mean=0, std=0.1) 
@@ -368,19 +396,21 @@ def main():
                   [1,1,1,1]])
     def xor(x1, x2, x3, x4):
         return (x1 ^ x2) ^ (x3 ^ x4)
-    y = np.array([[xor(x1, x2, x3, x4)] for x1, x2, x3, x4 in x])
+    y = np.array([[xor(x1, x2, x3, x4), not xor(x1, x2, x3, x4)] for x1, x2, x3, x4 in x])
 
-    print("Input Data:\n", x)
-    print("True Labels:\n", y)
-    print("Predicted Labels:\n", model.predict(x))
+    # print("Input Data:\n", x)
+    # print("True Labels:\n", y)
+    # print("Predicted Labels:\n", model.predict(x))
     # print("Weights before training:\n", model.weights)
     # print("Biases before training:\n", model.biases)
     # print("Weights Gradient before training:\n", model.weights_gradient)
     # print("Biases Gradient before training:\n", model.biases_gradient)
 
-    model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1)
+    model.train(x, y, batch_size=1, learning_rate=0.1, epochs=10000, loss_function='MSE', verbose=1, error_threshold=0.0001, seed=42, l1_lambda=0.0001, l2_lambda=0.0001)
     for i in range(len(y)):
         print(f"Predicted Labels for {x[i]}:", model.predict(x[i].reshape(1, -1)), "True Labels:", y[i])
+    # model.plot_network_graph(visualize='weights')
+    # model.plot_network_graph(visualize='gradients')
     # print("Weights after training:\n", model.weights)
     # print("Biases after training:\n", model.biases)
     # print("Weights Gradient after training:\n", model.weights_gradient)
