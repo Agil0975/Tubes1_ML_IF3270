@@ -1,5 +1,8 @@
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
+import networkx as nx
+import pickle
 
 import ActivationFunction as af
 import LossFunction as lf
@@ -331,14 +334,106 @@ class FFNN:
         np.ndarray: Predicted labels.
         """
         return self.__feed_forward(x)
-    
-    def plot_network_graph(self, *, visualize=''):
-        """
-        Plot the network graph.
 
-        Parameters:
-        visualize (str): Type of visualization ('', 'weights', 'gradients'). 
+    def plot_network_graph(self, *, visualize="both"):
         """
+        Plot the network graph, showing network structure with numeric weight, gradient, bias, and bias gradient labels.
+        Parameters:
+        visualize (str): Type of visualization. 
+            Options:
+            - weights: Show network weights
+            - gradients: Show network weight gradients
+            - both: Show both weights and gradients (default)
+        """
+
+        if visualize not in ["weights", "gradients", "both"]:
+            raise ValueError('Invalid visualization type. Use "weights", "gradients", or "both".')
+
+        # Create a directed graph
+        G = nx.DiGraph()
+        
+        # Track node positions for consistent layout
+        pos = {}
+        layer_heights = {}
+
+        # Create nodes for each layer
+        node_labels = {}
+        for layer_idx, neurons in enumerate(self.layers):
+            # Calculate vertical spacing for neurons in this layer
+            layer_heights[layer_idx] = np.linspace(0, 1, neurons + 2)[1:-1]
+            
+            for neuron_idx in range(neurons):
+                node_name = f"L{layer_idx}_N{neuron_idx}"
+                
+                # Position nodes horizontally by layer, vertically by neuron count
+                pos[node_name] = (layer_idx, layer_heights[layer_idx][neuron_idx])
+                
+                # Add node to graph
+                G.add_node(node_name)
+                
+                # Create node labels with bias information
+                if layer_idx > 0:  # Skip input layer
+                    bias = self.biases[layer_idx][neuron_idx] if self.biases[layer_idx] is not None else 0
+                    bias_gradient = self.biases_gradient[layer_idx][neuron_idx] if self.biases_gradient[layer_idx] is not None else 0
+                    
+                    # Construct label based on visualization type
+                    if visualize == "weights":
+                        # Single type visualization
+                        node_labels[node_name] = f"B: {bias:.4f}"
+                    elif visualize == "gradients":
+                        # Single type visualization
+                        node_labels[node_name] = f"BG: {bias_gradient:.4f}"
+                    elif visualize == "both":
+                        # Both weights and gradients
+                        node_labels[node_name] = f"B: {bias:.4f}\nBG: {bias_gradient:.4f}"
+                else:
+                    # Input layer nodes remain empty
+                    node_labels[node_name] = ""
+        
+        # Add edges between layers with weights
+        edge_labels = {}
+        for layer_idx in range(1, len(self.layers)):
+            for src_neuron in range(self.layers[layer_idx-1]):
+                for dest_neuron in range(self.layers[layer_idx]):
+                    src_node = f"L{layer_idx-1}_N{src_neuron}"
+                    dest_node = f"L{layer_idx}_N{dest_neuron}"
+                    
+                    # Determine edge labels based on visualization type
+                    if visualize in ["weights", "both"]:
+                        weight = self.weights[layer_idx][src_neuron, dest_neuron]
+                        edge_labels[(src_node, dest_node)] = f"W: {weight:.4f}"
+                    
+                    if visualize in ["gradients", "both"]:
+                        gradient = self.weights_gradient[layer_idx][src_neuron, dest_neuron] if self.weights_gradient[layer_idx] is not None else 0
+                        
+                        # If showing both, append gradient to existing label
+                        if visualize == "both":
+                            edge_labels[(src_node, dest_node)] += f"\nWG: {gradient:.4f}"
+                        else:
+                            edge_labels[(src_node, dest_node)] = f"WG: {gradient:.4f}"
+                    
+                    # Add edge to graph
+                    G.add_edge(src_node, dest_node)
+        
+        # Create the plot
+        plt.figure(figsize=(12, 6.75))
+        plt.title(f"Neural Network Graph - {visualize.capitalize()} Visualization")
+        
+        # Draw nodes
+        nx.draw_networkx_nodes(G, pos, node_color="lightgray", node_size=1500)
+        
+        # Draw edges
+        nx.draw_networkx_edges(G, pos, arrows=True, arrowsize=10)
+        
+        # Draw node labels (bias and bias gradient information)
+        nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=5)
+        
+        # Draw edge labels (weight and weight gradient information)
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=5, label_pos=0.75)
+        
+        plt.axis("off")
+        plt.tight_layout()
+        plt.show()
 
     def plot_weight_distribution(layers: list[int]):
         """
@@ -394,8 +489,8 @@ def main():
 
     # Add layers to the model
     model.add_layer(4)
-    model.add_layer(32, activation_function='elu', initialization_method='he_normal')
-    model.add_layer(16, activation_function='tanh', initialization_method='xavier_normal')
+    model.add_layer(3, activation_function='elu', initialization_method='he_normal')
+    model.add_layer(3, activation_function='tanh', initialization_method='xavier_normal')
     model.add_layer(2, activation_function='sigmoid', initialization_method='xavier_normal')
 
     # model.add_layer(2)
@@ -450,6 +545,13 @@ def main():
     # print("Weights Gradient after training:\n", model.weights_gradient)
     # print("Biases Gradient after training:\n", model.biases_gradient)
     # print(model.history)
+
+    model.plot_network_graph()
+    # model.plot_weight_distribution([1, 2])
+    # model.plot_gradient_distribution([1, 2])
+
+    # model.save("model.pkl")
+    # loaded_model = FFNN.load("model.pkl")
 
 if __name__ == "__main__":
     main()
