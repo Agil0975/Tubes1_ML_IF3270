@@ -18,7 +18,6 @@ class FFNN:
         self.biases_gradient = []   # list of numpy arrays representing the gradients of the biases for each layer
         self.loss_function = None   # loss function object
         self.history = None         # history of the loss function (training and validation loss) for each epoch
-        self.rmsNorm = False        # do RMS or not
 
         self._lf = lf.LossFunction()        # Initialize the loss function object
         self._af = af.ActivationFunction()  # Initialize the activation function object
@@ -137,20 +136,7 @@ class FFNN:
         else:
             raise ValueError(f"Unknown initialization method: {method}. Use 'zero', 'uniform', 'normal', "
                              "'xavier_uniform', 'xavier_normal', 'he_uniform', or 'he_normal'.")
-    
-    def __rms_norm(self, x: np.ndarray) -> np.ndarray:
-        """
-        Perform RMS normalization on the input data.
-
-        Parameters:
-        x (np.ndarray): Input data.
-
-        Returns:
-        np.ndarray: Normalized data.
-        """
-        rms = np.sqrt(np.mean(x ** 2, axis=0, keepdims=True)) + 1e-8
-        return x / rms
-
+        
     def __feed_forward(self, x: np.ndarray) -> np.ndarray:
         """
         Perform feedforward operation.
@@ -162,10 +148,7 @@ class FFNN:
         np.ndarray: Output of the neural network.
         """
         for i in range(1, len(self.layers)):
-            z = np.dot(x, self.weights[i]) + self.biases[i]  # net-value for each layer
-            if self.rmsNorm:
-                z = self.__rms_norm(z)
-            x = self._af.activation(z, activation_type=self.activations[i][0], **self.activations[i][1])
+            x = self._af.activation(np.dot(x, self.weights[i]) + self.biases[i], activation_type=self.activations[i][0], **self.activations[i][1])
         return x
 
     def __back_propagation(self, x: np.ndarray, y: np.ndarray) -> None:
@@ -183,35 +166,21 @@ class FFNN:
         a = x
         activations = [x]  # List to store activations for each layer
         zs = [None]        # List to store net-value for each layer
-        rms_zs = [None]    # List to store RMS normalized net-value for each layer
         for i in range(1, len(self.layers)):
-            z = np.dot(a, self.weights[i]) + self.biases[i]  # net-value for each layer
+            z = np.dot(a, self.weights[i]) + self.biases[i]  # net-value for each layer 
             zs.append(z)
-
-            if self.rmsNorm:
-                rms_z = self.__rms_norm(z)
-                rms_zs.append(rms_z)
-                a = self._af.activation(rms_z, activation_type=self.activations[i][0], **self.activations[i][1])  # activation function for each layer
-            else:
-                a = self._af.activation(z, activation_type=self.activations[i][0], **self.activations[i][1])   # activation function for each layer
-
+            a = self._af.activation(z, activation_type=self.activations[i][0], **self.activations[i][1])  # activation function for each layer
             activations.append(a)
 
         # Backward pass
         𝛿 = [np.zeros(a.shape) for a in activations]        # derivative of loss with respect to net
         for i in range(len(self.layers) - 1, 0, -1):        # loop through layers in reverse order excluding input layer
             if i == len(self.layers) - 1:
-                if self.rmsNorm:
-                    pass
-                else:
-                    𝛿[i] = self._lf.loss_derivative(y, activations[i], loss_type=self.loss_function) * \
-                            self._af.activation_derivative(zs[i], activation_type=self.activations[i][0], **self.activations[i][1])
+                𝛿[i] = self._lf.loss_derivative(y, activations[i], loss_type=self.loss_function) * \
+                        self._af.activation_derivative(zs[i], activation_type=self.activations[i][0], **self.activations[i][1])
             else:
-                if self.rmsNorm:
-                    pass
-                else:
-                    𝛿[i] = np.dot(𝛿[i + 1], self.weights[i + 1].T) * \
-                            self._af.activation_derivative(zs[i], activation_type=self.activations[i][0], **self.activations[i][1])
+                𝛿[i] = np.dot(𝛿[i + 1], self.weights[i + 1].T) * \
+                        self._af.activation_derivative(zs[i], activation_type=self.activations[i][0], **self.activations[i][1])
                 
             nabla_b[i] = 𝛿[i]
             nabla_w[i] = activations[i - 1].reshape(-1, 1) * 𝛿[i]
@@ -231,7 +200,6 @@ class FFNN:
               verbose: int = 1,
               seed: int = None,
               error_threshold: float = 0,
-              rmsNorm: bool = False,
               ):
         """
         Train the neural network.
@@ -250,10 +218,8 @@ class FFNN:
         verbose (int): Verbosity mode. 0 = silent, 1 = progress bar + training info
         seed (int): Random seed for shuffling the data.
         error_threshold (float): Threshold for early stopping based on validation loss.
-        rmsNorm (bool): Whether to use RMS normalization or not.
         """
         self.loss_function = loss_function
-        self.rmsNorm = rmsNorm
         history = np.zeros((epochs, 2))  # Store training and validation loss for each epoch
         num_training_samples = x_train.shape[0]
 
