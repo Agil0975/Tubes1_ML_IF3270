@@ -1,8 +1,8 @@
 import numpy as np
 import sys
 
-import ActivationFunction as af
-import LossFunction as lf
+from . import ActivationFunction as af
+from . import LossFunction as lf
 
 class FFNN:
     def __init__(self):
@@ -419,3 +419,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # run: python -m src.FFNN.FFNN
