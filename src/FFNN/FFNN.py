@@ -437,11 +437,11 @@ class FFNN:
 
     def plot_weight_distribution(self, layers=None):
         """
-        Plotting the weight and bias distribution for specified layers using histograms.
+        Plotting the weight and bias distribution for specified layers.
 
         Parameters:
         layers (list[int], optional): List of layer indices to plot. 
-                                    If None, plots all layers except input layer.
+                                      If None, plots all layers except input layer.
         """
 
         # If no layers specified, default to all layers except input layer
@@ -478,7 +478,7 @@ class FFNN:
         )
         
         # Add main title to the figure
-        fig.suptitle("Weight and Bias Distribution Across Neural Network Layers", 
+        fig.suptitle("Weight and Bias Distribution", 
                     fontsize=16, fontweight="bold")
         
         # Ensure axs is a 2D array for consistent indexing
@@ -552,6 +552,115 @@ class FFNN:
         layers (list[int]): List of layers to be plotted
         """
         pass
+
+    def plot_gradient_distribution(self, layers=None):
+        """
+        Plotting the weight and bias gradient distribution for specified layers.
+
+        Parameters:
+        layers (list[int], optional): List of layer indices to plot. 
+                                      If None, plots all layers except input layer.
+        """
+
+        # If no layers specified, default to all layers except input layer
+        if layers is None:
+            layers = range(1, len(self.layers))
+        
+        # Filter out layers that are out of range or have None weight/bias gradients
+        valid_layers = [
+            layer for layer in layers 
+            if layer < len(self.layers) and 
+            self.weights_gradient[layer] is not None and 
+            self.biases_gradient[layer] is not None
+        ]
+
+        # If no valid layers, raise an informative error
+        if not valid_layers:
+            raise ValueError("No valid layers found to plot. Ensure layer indices are correct and gradients are computed.")
+        
+        # Calculate number of rows needed (2 layers per row)
+        num_layers = len(valid_layers)
+        num_rows = (num_layers + 1) // 2
+
+        # Create figure with 4 columns per row (2 for weight gradients, 2 for bias gradients)
+        fig, axs = plt.subplots(num_rows, 4, figsize=(12, 3*num_rows))
+        
+        # Adjust subplot spacing for better readability
+        plt.subplots_adjust(
+            top=0.95,
+            bottom=0.05,
+            left=0.05,
+            right=0.95,
+            hspace=0.3,
+            wspace=0.3
+        )
+        
+        # Add main title to the figure
+        fig.suptitle("Weight and Bias Gradient Distribution", 
+                    fontsize=16, fontweight="bold")
+        
+        # Ensure axs is a 2D array for consistent indexing
+        if num_rows == 1:
+            axs = axs.reshape(1, -1)
+        
+        # Iterate through rows (each row contains 2 layers)
+        for row in range(num_rows):
+            # Determine which layers to plot in this row
+            layer_indices = valid_layers[row*2:row*2+2]
+            
+            # Iterate through layers in this row
+            for col, layer_index in enumerate(layer_indices):
+                # Flatten weight gradients and extract bias gradients
+                weight_gradients = self.weights_gradient[layer_index].flatten()
+                bias_gradients = self.biases_gradient[layer_index]
+                
+                # Plot weight gradient distribution histogram
+                axs[row, col*2].hist(weight_gradients, bins=50, edgecolor="black", alpha=0.7, color="skyblue")
+                axs[row, col*2].set_title(f"Layer {layer_index} - Weight Gradient Distribution", fontsize=10)
+                axs[row, col*2].set_xlabel("Weight Gradient", fontsize=8)
+                axs[row, col*2].set_ylabel("Frequency", fontsize=8)
+                axs[row, col*2].yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+                axs[row, col*2].tick_params(axis="both", which="major", labelsize=7)
+                
+                # Calculate and display weight gradient distribution statistics
+                weight_grad_mean = np.mean(weight_gradients)
+                weight_grad_std = np.std(weight_gradients)
+                axs[row, col*2].text(0.95, 0.95, 
+                                    f"Mean: {weight_grad_mean:.4f}\nStd: {weight_grad_std:.4f}", 
+                                    transform=axs[row, col*2].transAxes, 
+                                    verticalalignment="top", 
+                                    horizontalalignment="right",
+                                    fontsize=7,
+                                    bbox=dict(boxstyle="round", facecolor="white", alpha=0.5))
+                
+                # Plot bias gradient distribution histogram
+                axs[row, col*2+1].hist(bias_gradients, bins=50, edgecolor="black", alpha=0.7, color="lightgreen")
+                axs[row, col*2+1].set_title(f"Layer {layer_index} - Bias Gradient Distribution", fontsize=10)
+                axs[row, col*2+1].set_xlabel("Bias Gradient", fontsize=8)
+                axs[row, col*2+1].set_ylabel("Frequency", fontsize=8)
+                axs[row, col*2+1].yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+                axs[row, col*2+1].tick_params(axis="both", which="major", labelsize=7)
+                
+                # Calculate and display bias gradient distribution statistics
+                bias_grad_mean = np.mean(bias_gradients)
+                bias_grad_std = np.std(bias_gradients)
+                axs[row, col*2+1].text(0.95, 0.95, 
+                                    f"Mean: {bias_grad_mean:.4f}\nStd: {bias_grad_std:.4f}", 
+                                    transform=axs[row, col*2+1].transAxes, 
+                                    verticalalignment="top", 
+                                    horizontalalignment="right",
+                                    fontsize=7,
+                                    bbox=dict(boxstyle="round", facecolor="white", alpha=0.5))
+        
+        # Hide any unused subplots
+        for row in range(num_rows):
+            for col in range(4):
+                if not axs[row, col].has_data():
+                    axs[row, col].axis("off")
+        
+        # Adjust layout and display the plot
+        plt.tight_layout()
+        plt.show()
 
     def plot_loss_function(self):
         """
@@ -648,7 +757,7 @@ def main():
 
     model.plot_network_graph(visualize="both")
     model.plot_weight_distribution([1, 2])
-    # model.plot_gradient_distribution([1, 2])
+    model.plot_gradient_distribution([2, 3])
 
     # model.save("model.pkl")
     # loaded_model = FFNN.load("model.pkl")
