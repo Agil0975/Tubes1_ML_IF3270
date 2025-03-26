@@ -435,14 +435,114 @@ class FFNN:
         plt.tight_layout()
         plt.show()
 
-    def plot_weight_distribution(layers: list[int]):
+    def plot_weight_distribution(self, layers=None):
         """
-        Plotting the weight distribution for a specific layer
+        Plotting the weight and bias distribution for specified layers using histograms.
 
         Parameters:
-        layers (list[int]): List of layers to be plotted
+        layers (list[int], optional): List of layer indices to plot. 
+                                    If None, plots all layers except input layer.
         """
-        pass
+
+        # If no layers specified, default to all layers except input layer
+        if layers is None:
+            layers = range(1, len(self.layers))
+        
+        # Filter out layers that are out of range or have None weights/biases
+        valid_layers = [
+            layer for layer in layers 
+            if layer < len(self.layers) and 
+            self.weights[layer] is not None and 
+            self.biases[layer] is not None
+        ]
+
+        # If no valid layers, raise an informative error
+        if not valid_layers:
+            raise ValueError("No valid layers found to plot. Ensure layer indices are correct and weights/biases are initialized.")
+        
+        # Calculate number of rows needed (2 layers per row)
+        num_layers = len(valid_layers)
+        num_rows = (num_layers + 1) // 2
+
+        # Create figure with 4 columns per row (2 for weights, 2 for biases)
+        fig, axs = plt.subplots(num_rows, 4, figsize=(12, 3*num_rows))
+        
+        # Adjust subplot spacing for better readability
+        plt.subplots_adjust(
+            top=0.95,
+            bottom=0.05,
+            left=0.05,
+            right=0.95,
+            hspace=0.3,
+            wspace=0.3
+        )
+        
+        # Add main title to the figure
+        fig.suptitle("Weight and Bias Distribution Across Neural Network Layers", 
+                    fontsize=16, fontweight="bold")
+        
+        # Ensure axs is a 2D array for consistent indexing
+        if num_rows == 1:
+            axs = axs.reshape(1, -1)
+        
+        # Iterate through rows (each row contains 2 layers)
+        for row in range(num_rows):
+            # Determine which layers to plot in this row
+            layer_indices = valid_layers[row*2:row*2+2]
+            
+            # Iterate through layers in this row
+            for col, layer_index in enumerate(layer_indices):
+                # Flatten weights and extract biases
+                weights = self.weights[layer_index].flatten()
+                biases = self.biases[layer_index]
+                
+                # Plot weight distribution histogram
+                axs[row, col*2].hist(weights, bins=50, edgecolor="black", alpha=0.7, color="skyblue")
+                axs[row, col*2].set_title(f"Layer {layer_index} - Weight Distribution", fontsize=10)
+                axs[row, col*2].set_xlabel("Weight", fontsize=8)
+                axs[row, col*2].set_ylabel("Frequency", fontsize=8)
+                axs[row, col*2].yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+                axs[row, col*2].tick_params(axis="both", which="major", labelsize=7)
+                
+                # Calculate and display weight distribution statistics
+                weight_mean = np.mean(weights)
+                weight_std = np.std(weights)
+                axs[row, col*2].text(0.95, 0.95, 
+                                    f"Mean: {weight_mean:.4f}\nStd: {weight_std:.4f}", 
+                                    transform=axs[row, col*2].transAxes, 
+                                    verticalalignment="top", 
+                                    horizontalalignment="right",
+                                    fontsize=7,
+                                    bbox=dict(boxstyle="round", facecolor="white", alpha=0.5))
+                
+                # Plot bias distribution histogram
+                axs[row, col*2+1].hist(biases, bins=50, edgecolor="black", alpha=0.7, color="lightgreen")
+                axs[row, col*2+1].set_title(f"Layer {layer_index} - Bias Distribution", fontsize=10)
+                axs[row, col*2+1].set_xlabel("Bias", fontsize=8)
+                axs[row, col*2+1].set_ylabel("Frequency", fontsize=8)
+                axs[row, col*2+1].yaxis.set_major_locator(plt.MaxNLocator(integer=True))
+                axs[row, col*2+1].tick_params(axis="both", which="major", labelsize=7)
+                
+                # Calculate and display bias distribution statistics
+                bias_mean = np.mean(biases)
+                bias_std = np.std(biases)
+                axs[row, col*2+1].text(0.95, 0.95, 
+                                    f"Mean: {bias_mean:.4f}\nStd: {bias_std:.4f}", 
+                                    transform=axs[row, col*2+1].transAxes, 
+                                    verticalalignment="top", 
+                                    horizontalalignment="right",
+                                    fontsize=7,
+                                    bbox=dict(boxstyle="round", facecolor="white", alpha=0.5))
+        
+        # Hide any unused subplots
+        for row in range(num_rows):
+            for col in range(4):
+                if not axs[row, col].has_data():
+                    axs[row, col].axis("off")
+        
+        # Adjust layout and display the plot
+        plt.tight_layout()
+        plt.show()
 
     def plot_gradient_distribution(layers: list[int]):
         """
@@ -489,9 +589,9 @@ def main():
 
     # Add layers to the model
     model.add_layer(4)
-    model.add_layer(3, activation_function='elu', initialization_method='he_normal')
-    model.add_layer(3, activation_function='tanh', initialization_method='xavier_normal')
-    model.add_layer(2, activation_function='sigmoid', initialization_method='xavier_normal')
+    model.add_layer(32, activation_function="elu", initialization_method="he_normal")
+    model.add_layer(16, activation_function="tanh", initialization_method="xavier_normal")
+    model.add_layer(2, activation_function="sigmoid", initialization_method="xavier_normal")
 
     # model.add_layer(2)
     # model.add_layer(2, activation_function='leaky_relu', activation_parameters={'alpha': 6666}, initialization_method='normal', mean=0, std=0.1) 
@@ -546,8 +646,8 @@ def main():
     # print("Biases Gradient after training:\n", model.biases_gradient)
     # print(model.history)
 
-    model.plot_network_graph()
-    # model.plot_weight_distribution([1, 2])
+    model.plot_network_graph(visualize="both")
+    model.plot_weight_distribution([1, 2])
     # model.plot_gradient_distribution([1, 2])
 
     # model.save("model.pkl")
