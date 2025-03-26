@@ -701,7 +701,27 @@ class FFNN:
         Parameters:
         filename (str): Name of the file to save the neural network.
         """
-        pass
+
+        model_state = {
+            "layers": self.layers,
+            "weights": self.weights,
+            "biases": self.biases,
+            "activations": self.activations,
+            "initialization": self.initialization,
+            "weights_gradient": self.weights_gradient,
+            "biases_gradient": self.biases_gradient,
+            "loss_function": self.loss_function,
+            "history": self.history,
+            "rmsNorm": self.rmsNorm,
+        }
+
+        try:
+            with open(filename, "wb") as f:
+                pickle.dump(model_state, f)
+            
+            print(f"Model saved successfully to {filename}")
+        except Exception as e:
+            print(f"Error saving model to {filename}: {e}")
 
     def load(self, filename: str):
         """
@@ -783,8 +803,7 @@ def main():
     model.plot_gradient_distribution([2, 3])
     model.plot_loss_function()
 
-    # model.save("model.pkl")
-    # loaded_model = FFNN.load("model.pkl")
+    model.save("model_example.pkl")
 
 if __name__ == "__main__":
     main()
