@@ -98,7 +98,7 @@ class FFNN:
             return np.random.normal(0, std, (neurons_in, neurons_out))
         
         elif method == 'he_uniform':
-            limit = np.sqrt(3 / neurons_in)
+            limit = np.sqrt(6 / neurons_in)
             return np.random.uniform(-limit, limit, (neurons_in, neurons_out))
         
         elif method == 'he_normal':
