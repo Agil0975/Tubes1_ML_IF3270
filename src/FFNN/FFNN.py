@@ -723,14 +723,45 @@ class FFNN:
         except Exception as e:
             print(f"Error saving model to {filename}: {e}")
 
-    def load(self, filename: str):
+    @classmethod
+    def load(cls, filename: str) -> 'FFNN':
         """
-        Load the model network from a file.
+        Load the neural network model from a file.
 
         Parameters:
         filename (str): Name of the file to load the neural network.
+
+        Returns:
+        FFNN: Loaded neural network model
         """
-        pass
+
+        try:
+            with open(filename, "rb") as f:
+                model_state = pickle.load(f)
+
+            model = cls()
+
+            # Restore the attributes
+            model.layers = model_state["layers"]
+            model.weights = model_state["weights"]
+            model.biases = model_state["biases"]
+            model.activations = model_state["activations"]
+            model.initialization = model_state["initialization"]
+            model.weights_gradient = model_state["weights_gradient"]
+            model.biases_gradient = model_state["biases_gradient"]
+            model.loss_function = model_state["loss_function"]
+            model.history = model_state["history"]
+            model.rmsNorm = model_state["rmsNorm"]
+
+            # Reinitialize the function objects
+            model._lf = lf.LossFunction()
+            model._af = af.ActivationFunction()
+
+            print(f"Model loaded successfully from {filename}")
+            return model
+        except Exception as e:
+            print(f"Error loading model from {filename}: {e}")
+            return None
 
 def main():
     """
@@ -804,6 +835,31 @@ def main():
     model.plot_loss_function()
 
     model.save("model_example.pkl")
+    loaded_model = FFNN.load("model_example.pkl")
+
+    print("\n--- Loaded Model Predictions ---")
+    for i in range(len(y)):
+        print(f"Predicted Labels for {x[i]}:", loaded_model.predict(x[i].reshape(1, -1)), "True Labels:", y[i])
+
+    print("\n--- Comparing Weights and Gradients ---")
+    for layer in range(1, len(model.layers)):
+        print(f"\nLayer {layer}:")
+        print("Original Weights vs Loaded Weights:")
+        print(np.allclose(model.weights[layer], loaded_model.weights[layer]))
+        
+        print("Original Biases vs Loaded Biases:")
+        print(np.allclose(model.biases[layer], loaded_model.biases[layer]))
+        
+        print("Original Weight Gradients vs Loaded Weight Gradients:")
+        print(np.allclose(model.weights_gradient[layer], loaded_model.weights_gradient[layer]))
+        
+        print("Original Bias Gradients vs Loaded Bias Gradients:")
+        print(np.allclose(model.biases_gradient[layer], loaded_model.biases_gradient[layer]))
+
+    loaded_model.plot_network_graph(visualize="both")
+    loaded_model.plot_weight_distribution([1, 2])
+    loaded_model.plot_gradient_distribution([2, 3])
+    loaded_model.plot_loss_function()
 
 if __name__ == "__main__":
     main()
