@@ -282,6 +282,7 @@ class FFNN:
 
             if val_loss < error_threshold:
                 print(f"\nStopping early at epoch {epoch + 1} due to validation loss below threshold.")
+                history = history[:epoch + 1]  # Trim history to the number of epochs completed
                 break
                 
         self.weights_gradient = nabla_w
