@@ -544,15 +544,6 @@ class FFNN:
         plt.tight_layout()
         plt.show()
 
-    def plot_gradient_distribution(layers: list[int]):
-        """
-        Plotting the gradient weight distribution for a specific layer
-
-        Parameters:
-        layers (list[int]): List of layers to be plotted
-        """
-        pass
-
     def plot_gradient_distribution(self, layers=None):
         """
         Plotting the weight and bias gradient distribution for specified layers.
@@ -664,12 +655,44 @@ class FFNN:
 
     def plot_loss_function(self):
         """
-        Plotting the loss function for training and validation
+        Plotting the loss function for training and validation.
 
         Parameters:
         None
         """
-        pass
+
+        # Check if history exists
+        if self.history is None:
+            raise ValueError("No training history found. Please train the model first.")
+        
+        # Create the plot with two subplots
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6))
+        
+        # Epochs (starting from 1)
+        epochs = range(1, len(self.history) + 1)
+        
+        # Plot Training Loss
+        ax1.plot(epochs, self.history[:, 0], label="Training Loss", color="red")
+        ax1.set_title("Training Loss", fontsize=14)
+        ax1.set_xlabel("Epochs", fontsize=10)
+        ax1.set_ylabel("Loss", fontsize=10)
+        ax1.grid(True, linestyle="--", alpha=0.7)
+        
+        # Plot Validation Loss
+        ax2.plot(epochs, self.history[:, 1], label="Validation Loss", color="blue")
+        ax2.set_title("Validation Loss", fontsize=14)
+        ax2.set_xlabel("Epochs", fontsize=10)
+        ax2.set_ylabel("Loss", fontsize=10)
+        ax2.grid(True, linestyle="--", alpha=0.7)
+        
+        # Add overall title
+        fig.suptitle("Training and Validation Loss", fontsize=16, fontweight="bold")
+        
+        # Adjust layout to prevent overlap
+        plt.tight_layout()
+        
+        # Show the plot
+        plt.show()
 
     def save(self, filename: str):
         """
@@ -758,6 +781,7 @@ def main():
     model.plot_network_graph(visualize="both")
     model.plot_weight_distribution([1, 2])
     model.plot_gradient_distribution([2, 3])
+    model.plot_loss_function()
 
     # model.save("model.pkl")
     # loaded_model = FFNN.load("model.pkl")
