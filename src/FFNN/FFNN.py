@@ -678,7 +678,6 @@ class FFNN:
             "biases_gradient": self.biases_gradient,
             "loss_function": self.loss_function,
             "history": self.history,
-            "rmsNorm": self.rmsNorm,
         }
 
         try:
@@ -717,7 +716,6 @@ class FFNN:
             model.biases_gradient = model_state["biases_gradient"]
             model.loss_function = model_state["loss_function"]
             model.history = model_state["history"]
-            model.rmsNorm = model_state["rmsNorm"]
 
             # Reinitialize the function objects
             model._lf = lf.LossFunction()
@@ -738,8 +736,8 @@ def main():
 
     # Add layers to the model
     model.add_layer(4)
-    model.add_layer(32, activation_function="elu", initialization_method="he_normal")
-    model.add_layer(16, activation_function="tanh", initialization_method="xavier_normal")
+    model.add_layer(8, activation_function="elu", initialization_method="he_normal")
+    model.add_layer(8, activation_function="tanh", initialization_method="xavier_normal")
     model.add_layer(2, activation_function="sigmoid", initialization_method="xavier_normal")
 
     # model.add_layer(2)
