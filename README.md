@@ -30,16 +30,22 @@ pip install -r requirements.txt
     <tr>
         <td>13522006</td>
         <td>Agil Fadillah Sabri</td>
-        <td></td>
+        <td>
+            Implementasi algoritma FFNN; pengujian learning rate, regularisasi, dan perbandingan dengan library; pembuatan laporan.
+        </td>
     </tr>
     <tr>
         <td>13522034</td>
         <td>Bastian H Suryapratama</td>
-        <td></td>
+        <td>
+            Implementasi visualisasi, save, dan load model; pengujian inisialisasi bobot; pembuatan laporan.
+        </td>
     </tr>
     <tr>
         <td>13522052</td>
         <td>Haikal Assyauqi</td>
-        <td></td>
+        <td>
+            Pengujian depth dan width dan fungsi aktivasi; pembuatan laporan.
+        </td>
     </tr>
 </table>
